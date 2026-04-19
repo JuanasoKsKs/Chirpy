@@ -6,7 +6,7 @@ import (
 
 func (cfg *apiConfig) handlerReset(w http.ResponseWriter, r *http.Request) {
 	if cfg.platform != "dev" {
-		respondWithError(w, 403, "Forbidden action, needs to be dev to perform", nil)
+		respondWithError(w, http.StatusForbidden, "Forbidden action, needs to be dev to perform", nil)
 		return
 	}
 	type infoResponse struct {

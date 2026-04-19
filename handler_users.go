@@ -15,9 +15,6 @@ type User struct {
 }
 
 func (cfg *apiConfig) handlerCreateUser(w http.ResponseWriter, r *http.Request) {
-	type Email struct {
-		
-	}
 	decoder := json.NewDecoder(r.Body)
 	user := User{}
 	err := decoder.Decode(&user)
@@ -30,7 +27,7 @@ func (cfg *apiConfig) handlerCreateUser(w http.ResponseWriter, r *http.Request) 
 		respondWithError(w, http.StatusInternalServerError, "Error creating the User", err)
 		return
 	}
-	respondWithJSON(w, 201, User{
+	respondWithJSON(w, http.StatusCreated, User{
 		Id: userDB.ID,
 		CreatedAt: userDB.CreatedAt,
 		UpdatedAt: userDB.UpdatedAt,
