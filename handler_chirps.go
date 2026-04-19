@@ -53,6 +53,7 @@ func (cfg *apiConfig) handlerGetChirps(w http.ResponseWriter, r *http.Request) {
 	chirpsDB, err := cfg.dbQueries.GetChirps(r.Context())
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Couldn't get chirps", err)
+		return
 	}
 	chirps := []Chirp{}
 	for i, c := range chirpsDB {
@@ -64,4 +65,25 @@ func (cfg *apiConfig) handlerGetChirps(w http.ResponseWriter, r *http.Request) {
 		chirps[i].UserID = c.UserID
 	}
 	respondWithJSON(w, http.StatusOK, chirps)
+}
+
+func (cfg *apiConfig) handlerGetChirp(w http.ResponseWriter, r *http.Request) {
+	chirpString := r.PathValue("chirpID")
+	chirpID, err := uuid.Parse(chirpString)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "couldn't parse the UUID string", err)
+		return
+	}
+	chirpDB, err := cfg.dbQueries.GetChirp(r.Context(), chirpID)
+	if err != nil {
+		respondWithError(w, 404, "couldn't get chirp", err)
+		return
+	}
+	respondWithJSON(w, http.StatusOK, Chirp{
+		ID: chirpDB.ID,
+		CreatedAt: chirpDB.CreatedAt,
+		UpdatedAt: chirpDB.UpdatedAt,
+		Body: chirpDB.Body,
+		UserID: chirpDB.UserID,
+	})
 }
