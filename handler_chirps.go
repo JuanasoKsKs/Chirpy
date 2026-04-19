@@ -49,6 +49,7 @@ func (cfg *apiConfig) handlerChirps(w http.ResponseWriter, r *http.Request) {
 		UserID: chirpDB.UserID,
 	})
 }
+
 func (cfg *apiConfig) handlerGetChirps(w http.ResponseWriter, r *http.Request) {
 	chirpsDB, err := cfg.dbQueries.GetChirps(r.Context())
 	if err != nil {
@@ -76,7 +77,7 @@ func (cfg *apiConfig) handlerGetChirp(w http.ResponseWriter, r *http.Request) {
 	}
 	chirpDB, err := cfg.dbQueries.GetChirp(r.Context(), chirpID)
 	if err != nil {
-		respondWithError(w, 404, "couldn't get chirp", err)
+		respondWithError(w, http.StatusNotFound, "couldn't get chirp", err)
 		return
 	}
 	respondWithJSON(w, http.StatusOK, Chirp{
