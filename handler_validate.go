@@ -19,7 +19,7 @@ func handlerChirpsValidate(w http.ResponseWriter, r *http.Request) {
 	log.Println(params, 2)
 	err := decoder.Decode(&params)
 	if err != nil {
-		responseWithError(w, 500, "Couldn't decode parameters", err)
+		respondWithError(w, http.StatusInternalServerError, "Couldn't decode parameters", err)
 		return
 	}
 
@@ -27,7 +27,7 @@ func handlerChirpsValidate(w http.ResponseWriter, r *http.Request) {
 	const maxCirpLength = 140
 
 	if len(params.Body) > maxCirpLength {
-		responseWithError(w, 400, "Chirp is too long", nil)
+		respondWithError(w, http.StatusBadRequest, "Chirp is too long", nil)
 		return
 	}
 	filtered := filterProfane(params.Body)

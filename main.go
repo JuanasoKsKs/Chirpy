@@ -14,25 +14,29 @@ import (
 type apiConfig struct {
 	fileserverHits atomic.Int32
 	dbQueries *database.Queries
+	platform string
 }
+
+
 
 func main() {
 	const filepathRoot = "."
 	const port = "8080"
 	godotenv.Load()
 	dbURL := os.Getenv("DB_URL")
+	platform := os.Getenv("PLATFORM")
 	db, err := sql.Open("postgres", dbURL)
 	if err != nil {
 		log.Fatalf("error opening conection to the database: %s\n", err)
 	}
 	defer db.Close()
 
-
 	mux := http.NewServeMux()
 
 	prefixed_hadler := http.StripPrefix("/app",http.FileServer(http.Dir(filepathRoot)))
 	cfgs := &apiConfig{
 		dbQueries: database.New(db),
+		platform: platform,
 	}
 
 	mux.Handle("/app/", cfgs.middlewareMetricsInc(prefixed_hadler))
@@ -40,6 +44,7 @@ func main() {
 	mux.HandleFunc("GET /admin/metrics", cfgs.handlerMetrics)
 	mux.HandleFunc("POST /admin/reset", cfgs.handlerReset)
 	mux.HandleFunc("POST /api/validate_chirp", handlerChirpsValidate)
+	mux.HandleFunc("POST /api/users", cfgs.handlerCreateUser)
 	srv := &http.Server{
 		Addr : ":" + port,
 		Handler : mux,

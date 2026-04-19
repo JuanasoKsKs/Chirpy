@@ -6,7 +6,7 @@ import(
 	"encoding/json"
 )
 
-func responseWithError(w http.ResponseWriter, code int, msg string, err error) {
+func respondWithError(w http.ResponseWriter, code int, msg string, err error) {
 	if err != nil {
 		log.Println(err)
 	}
