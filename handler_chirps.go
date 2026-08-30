@@ -6,6 +6,7 @@ import (
 	"github.com/google/uuid"
 	"time"
 	"github.com/JuanasoKsKs/Chirpy/internal/database"
+	"github.com/JuanasoKsKs/Chirpy/internal/auth"
 )
 type Chirp struct {
 	ID uuid.UUID `json:"id"`
