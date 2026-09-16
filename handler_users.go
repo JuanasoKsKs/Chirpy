@@ -15,6 +15,8 @@ type User struct {
 	UpdatedAt time.Time `json:"updated_at"`
 	Email string `json:"email"`
 	Password string `json:"password"`
+	ExpiresInSeconds int `json:"expires_in_seconds"`
+	Token string `json:"token"`
 }
 
 func (cfg *apiConfig) handlerCreateUser(w http.ResponseWriter, r *http.Request) {
@@ -65,11 +67,20 @@ func (cfg *apiConfig) handlerLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if passed {
+		if user.ExpiresInSeconds < 1 || user.ExpiresInSeconds > 3600 {
+			user.ExpiresInSeconds = 3600
+		}
+		jwt, err := auth.MakeJWT(userDB.ID, cfg.secret, time.Duration(user.ExpiresInSeconds) * time.Second)
+		if err != nil {
+			respondWithError(w, 500, "Error generating the jwt", err)
+		}
+
 		respondWithJSON(w, http.StatusOK, User{
 			ID: userDB.ID,
 			UpdatedAt: userDB.UpdatedAt,
 			CreatedAt: userDB.CreatedAt,
 			Email: userDB.Email,
+			Token: jwt,
 		})
 	} else {
 		respondWithError(w, 401, "Incorrect Email or password", nil)

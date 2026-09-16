@@ -7,6 +7,7 @@ import (
 	"time"
 	"github.com/JuanasoKsKs/Chirpy/internal/database"
 	"github.com/JuanasoKsKs/Chirpy/internal/auth"
+	//"fmt"
 )
 type Chirp struct {
 	ID uuid.UUID `json:"id"`
@@ -33,10 +34,23 @@ func (cfg *apiConfig) handlerChirps(w http.ResponseWriter, r *http.Request) {
 		respondWithError(w, http.StatusBadRequest, "Chirp is too long", nil)
 		return
 	}
+	auth_token, err := auth.GetBearerToken(r.Header)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "No authorization header", err)
+		return
+	}
+
+	id, err := auth.ValidateJWT(auth_token, cfg.secret)
+	if err != nil {
+		respondWithError(w, 401, "Invalid access token", err)
+		return
+	}
+
+
 	params.Body = filterProfane(params.Body)
 	chirpDB, err := cfg.dbQueries.CreateChirp(r.Context(), database.CreateChirpParams{
 		Body: params.Body,
-		UserID: params.UserID,
+		UserID: id,
 	})
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Couldn't create Chirp", err)

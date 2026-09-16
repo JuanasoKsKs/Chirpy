@@ -7,9 +7,6 @@ import (
 	"time"
 )
 
-func TestJWT(t *testing.T) {
-	fmt.Println("pass")
-}
 
 func TestCheckPasswordHash(t *testing.T) {
 	// First, we need to create some hashed passwords for testing

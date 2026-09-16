@@ -9,6 +9,7 @@ import (
 	"os"
 	"database/sql"
 	"github.com/JuanasoKsKs/Chirpy/internal/database"
+	//"fmt"
 )
 
 type apiConfig struct {
