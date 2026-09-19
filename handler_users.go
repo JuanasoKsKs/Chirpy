@@ -7,6 +7,7 @@ import(
 	"encoding/json"
 	"github.com/JuanasoKsKs/Chirpy/internal/auth"
 	"github.com/JuanasoKsKs/Chirpy/internal/database"
+	"errors"
 )
 
 type User struct {
@@ -15,6 +16,7 @@ type User struct {
 	UpdatedAt	 		time.Time 	`json:"updated_at"`
 	Email 				string 		`json:"email"`
 	Password			string 		`json:"-"`
+	IsChirpyRed			bool		`json:"is_chirpy_red"`
 }
 type parameters struct {
 	Password 	string `json:"password"`
@@ -24,6 +26,12 @@ type response struct {
 	User
 	Token 			string `json:"token"`
 	RefreshToken	string `json:"refresh_token"`
+}
+type webhooksParams struct {
+	Data struct{
+		UserID	uuid.UUID	`json:"user_id"`
+	}	`json:"data"`
+	Event string			`json:"event"`	
 }
 
 func (cfg *apiConfig) handlerCreateUser(w http.ResponseWriter, r *http.Request) {
@@ -53,10 +61,10 @@ func (cfg *apiConfig) handlerCreateUser(w http.ResponseWriter, r *http.Request) 
 			CreatedAt: userDB.CreatedAt,
 			UpdatedAt: userDB.UpdatedAt,
 			Email: userDB.Email,
+			IsChirpyRed: userDB.IsChirpyRed,
 		},
 	})
 }
-
 func (cfg *apiConfig) handlerLogin(w http.ResponseWriter, r *http.Request) {
 	decoder := json.NewDecoder(r.Body)
 	params := parameters{}
@@ -95,6 +103,7 @@ func (cfg *apiConfig) handlerLogin(w http.ResponseWriter, r *http.Request) {
 			UpdatedAt:	userDB.UpdatedAt,
 			CreatedAt: 	userDB.CreatedAt,
 			Email: 		userDB.Email,
+			IsChirpyRed: userDB.IsChirpyRed,
 		},
 		Token: 			accessToken,
 		RefreshToken: 	refreshToken,
@@ -120,7 +129,6 @@ func (cfg *apiConfig) handlerRefresh(w http.ResponseWriter, r *http.Request) {
 		Token:	accessToken,
 	})
 }
-
 func (cfg *apiConfig) handlerRevoke(w http.ResponseWriter, r *http.Request) {
 	token, err := auth.GetBearerToken(r.Header)
 	if err != nil {
@@ -133,8 +141,7 @@ func (cfg *apiConfig) handlerRevoke(w http.ResponseWriter, r *http.Request) {
 	}
 	respondWithJSON(w, http.StatusNoContent, response{}) // 204
 }
-
-func (cfg * apiConfig) handlerUpdate(w http.ResponseWriter, r *http.Request) {
+func (cfg *apiConfig) handlerUpdate(w http.ResponseWriter, r *http.Request) {
 	token, err := auth.GetBearerToken(r.Header)
 	if err != nil {
 		respondWithError(w, http.StatusUnauthorized, "No Token on authorization header", err) //401
@@ -167,7 +174,36 @@ func (cfg * apiConfig) handlerUpdate(w http.ResponseWriter, r *http.Request) {
 			UpdatedAt:	userDB.UpdatedAt,
 			CreatedAt: 	userDB.CreatedAt,
 			Email: 		userDB.Email,
+			IsChirpyRed: userDB.IsChirpyRed,
 		},
 	})
+
+}
+func (cfg *apiConfig) handlerWebhooks(w http.ResponseWriter, r *http.Request) {
+	key, err := auth.GetApiKey(r.Header)
+	if err != nil {
+		respondWithError(w, http.StatusUnauthorized, "No key on authorization header", err)
+		return
+	}
+	if key != cfg.polkaKey {
+		respondWithError(w, http.StatusUnauthorized, "Keys don't match", errors.New("Unauthorized user"))
+	}
+	decoder := json.NewDecoder(r.Body)
+	params := webhooksParams{}
+	err = decoder.Decode(&params)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Couldn't decode parameters", err)
+		return
+	}
+	if params.Event != "user.upgraded" {
+		respondWithError(w, http.StatusNoContent, "No valid request", errors.New("No valid event - Payment Failed"))
+		return
+	}
+	err = cfg.dbQueries.UpdateUserRed(r.Context(), params.Data.UserID)
+	if err != nil {
+		respondWithError(w, http.StatusNotFound, "User not found", err)
+		return
+	}
+	respondWithJSON(w, http.StatusNoContent, response{})
 
 }
