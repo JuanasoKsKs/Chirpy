@@ -9,6 +9,7 @@ import (
 	"os"
 	"database/sql"
 	"github.com/JuanasoKsKs/Chirpy/internal/database"
+	//"github.com/JuanasoKsKs/Chirpy/internal/auth"
 	//"fmt"
 )
 
@@ -53,10 +54,14 @@ func main() {
 	mux.HandleFunc("GET /api/chirps", cfgs.handlerGetChirps)
 	mux.HandleFunc("GET /api/chirps/{chirpID}", cfgs.handlerGetChirp)
 	mux.HandleFunc("POST /api/login", cfgs.handlerLogin)
+	mux.HandleFunc("POST /api/refresh", cfgs.handlerRefresh)
+	mux.HandleFunc("POST /api/revoke", cfgs.handlerRevoke)
+	mux.HandleFunc("PUT /api/users", cfgs.handlerUpdate)
 	srv := &http.Server{
 		Addr : ":" + port,
 		Handler : mux,
 	}
+
 
 	log.Printf("Serving on port: %s\n", port)
 	log.Fatal(srv.ListenAndServe())
