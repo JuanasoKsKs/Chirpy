@@ -57,6 +57,7 @@ func main() {
 	mux.HandleFunc("POST /api/refresh", cfgs.handlerRefresh)
 	mux.HandleFunc("POST /api/revoke", cfgs.handlerRevoke)
 	mux.HandleFunc("PUT /api/users", cfgs.handlerUpdate)
+	mux.HandleFunc("DELETE /api/chirps/{chirpID}", cfgs.handlerDelete)
 	srv := &http.Server{
 		Addr : ":" + port,
 		Handler : mux,

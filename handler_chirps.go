@@ -7,7 +7,9 @@ import (
 	"time"
 	"github.com/JuanasoKsKs/Chirpy/internal/database"
 	"github.com/JuanasoKsKs/Chirpy/internal/auth"
+	"errors"
 	//"fmt"
+	//"log"
 )
 type Chirp struct {
 	ID uuid.UUID `json:"id"`
@@ -87,7 +89,7 @@ func (cfg *apiConfig) handlerGetChirp(w http.ResponseWriter, r *http.Request) {
 	chirpString := r.PathValue("chirpID")
 	chirpID, err := uuid.Parse(chirpString)
 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "couldn't parse the UUID string", err)
+		respondWithError(w, http.StatusInternalServerError, "couldn't parse the UUID string", err) //500
 		return
 	}
 	chirpDB, err := cfg.dbQueries.GetChirp(r.Context(), chirpID)
@@ -102,4 +104,37 @@ func (cfg *apiConfig) handlerGetChirp(w http.ResponseWriter, r *http.Request) {
 		Body: chirpDB.Body,
 		UserID: chirpDB.UserID,
 	})
+}
+func (cfg *apiConfig) handlerDelete(w http.ResponseWriter, r *http.Request) {
+	chirpString := r.PathValue("chirpID")
+	chirpID, err := uuid.Parse(chirpString)
+	if err != nil {
+		respondWithError(w, http.StatusNotFound, "couldn't parse the UUID string", err) // 404
+		return
+	}
+	chirpDB, err := cfg.dbQueries.GetChirp(r.Context(), chirpID)
+	if err != nil {
+		respondWithError(w, http.StatusNotFound, "couldn't get chirp", err) //404
+		return
+	}
+	token, err := auth.GetBearerToken(r.Header)
+	if err != nil {
+		respondWithError(w, http.StatusUnauthorized, "No Token on authorization header", err) //401
+		return
+	}
+	userID, err := auth.ValidateJWT(token, cfg.secret)
+	if err != nil {
+		respondWithError(w, http.StatusUnauthorized, "Invalid token", err) //401
+		return
+	}
+	if chirpDB.UserID != userID {
+		respondWithError(w, http.StatusForbidden, "Not the owner", errors.New("This user is not the author of the chirp"))
+		return
+	}
+	err = cfg.dbQueries.DeleteChirp(r.Context(), chirpDB.ID)
+	if err != nil {
+		respondWithError(w, http.StatusNotFound, "Couldn't Delete the Chirp", err)
+	}
+	respondWithJSON(w, http.StatusNoContent, response{}) // 204
+	
 }

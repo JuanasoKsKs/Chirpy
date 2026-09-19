@@ -137,12 +137,12 @@ func (cfg *apiConfig) handlerRevoke(w http.ResponseWriter, r *http.Request) {
 func (cfg * apiConfig) handlerUpdate(w http.ResponseWriter, r *http.Request) {
 	token, err := auth.GetBearerToken(r.Header)
 	if err != nil {
-		respondWithError(w, http.StatusUnauthorized, "No Token on authorization header", err)
+		respondWithError(w, http.StatusUnauthorized, "No Token on authorization header", err) //401
 		return
 	}
 	UserID, err := auth.ValidateJWT(token, cfg.secret)
 	if err != nil {
-		respondWithError(w, http.StatusUnauthorized, "Invalid token", err)
+		respondWithError(w, http.StatusUnauthorized, "Invalid token", err) //401
 		return
 	}
 	decoder := json.NewDecoder(r.Body)
@@ -170,5 +170,4 @@ func (cfg * apiConfig) handlerUpdate(w http.ResponseWriter, r *http.Request) {
 		},
 	})
 
-	
 }
