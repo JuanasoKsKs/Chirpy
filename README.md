@@ -19,8 +19,8 @@ REST API that Handles authentication, encrypt passwords, POST/GET/UPDATE/DELETE 
 - `POST /api/login`: Allows users to communicate with the server after authentication.
 - `POST /api/chirps`: Allows authenticated users to create a new chirp.
 - `GET /api/chirps/{UserID}`: Allows authenticated users to retrieve owned chirps.
-Content must be as JSON in the `http.Request.Body`
-Others would be added shortly.
+- Content must be as JSON in the `http.Request.Body`
+- Others would be added shortly.
 
 
 ## Environment Variables
