@@ -8,6 +8,7 @@ import (
 	"github.com/JuanasoKsKs/Chirpy/internal/database"
 	"github.com/JuanasoKsKs/Chirpy/internal/auth"
 	"errors"
+	"sort"
 	//"fmt"
 	//"log"
 )
@@ -102,6 +103,10 @@ func (cfg *apiConfig) handlerGetChirps(w http.ResponseWriter, r *http.Request) {
 		chirps[i].UpdatedAt = c.UpdatedAt
 		chirps[i].Body = c.Body
 		chirps[i].UserID = c.UserID
+	}
+	sorted := r.URL.Query().Get("sort")
+	if sorted == "desc" {
+		sort.Slice(chirps, func(i, j int) bool {return chirps[i].CreatedAt.After(chirps[j].CreatedAt)})
 	}
 	respondWithJSON(w, http.StatusOK, chirps)
 }
